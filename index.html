@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Document</title>
+  </head>
+
+  <style>
+    #canvas {
+      border: 1px solid #ccc;
+    }
+    #wrapper {
+      position: relative;
+      width: 602px;
+      height: 602px;
+    }
+    #bar {
+      position: absolute;
+      height: 20px;
+      background: red;
+      width: 600px;
+      bottom: 0;
+      left: 1px;
+    }
+
+    #progress {
+      background: blue;
+      height: 100%;
+    }
+  </style>
+  <body>
+    <div id="wrapper">
+      <canvas id="canvas" width="600" height="600"> </canvas>
+      <div id="bar">
+        <div id="progress"></div>
+      </div>
+    </div>
+
+    <video id="video" autoplay style="display:none" src="./1.mp4"></video>
+
+    <div id="time"></div>
+  </body>
+
+  <script>
+    /** @type {HTMLCanvasElement} */
+    const canvas = document.getElementById("canvas");
+    const context = canvas.getContext("2d");
+
+    const bar = document.getElementById("bar");
+    const progress = document.getElementById("progress");
+
+    const offsetCanvas = document.createElement("canvas");
+    offsetCanvas.width = 600;
+    offsetCanvas.height = 600;
+    const offsetContext = offsetCanvas.getContext("2d");
+
+    const image = document.createElement("img");
+
+    const video = document.getElementById("video");
+
+    console.log(video);
+
+    requestAnimationFrame(loop);
+
+    image.crossOrigin = "Anonymous";
+
+    image.onload = function() {};
+
+    image.src = "./1.jpg";
+
+    video.src = "./1.mp4";
+
+    bar.onclick = function(e) {
+      console.log(e);
+      const { offsetX } = e;
+      const t = (offsetX / bar.offsetWidth) * video.duration;
+      console.log(t);
+      video.currentTime = t;
+    };
+
+    function loop() {
+      offsetContext.drawImage(
+        video,
+        0,
+        0,
+        600,
+        (600 / video.videoWidth) * video.videoHeight
+      );
+      context.drawImage(video, 0, 0);
+      const duration = video.duration;
+
+      const current = video.currentTime;
+      document.getElementById("time").innerHTML = current;
+
+      const percent = current / duration;
+
+      progress.style.width = percent * 100 + "%";
+
+      const imgData = offsetContext.getImageData(0, 0, 1000, 1000);
+
+      const { data, width, height } = imgData;
+
+      for (let i = 0; i < data.length; i = i + 4) {
+        const r = data[i];
+        const g = data[i + 1];
+        const b = data[i + 2];
+        const a = data[i + 3];
+
+        const avg = (r + g + b) / 3;
+
+        data[i] = data[i + 1] = data[i + 2] = avg / 2;
+      }
+
+      context.putImageData(imgData, 0, 0);
+      requestAnimationFrame(loop);
+    }
+  </script>
+</html>
